@@ -11,12 +11,11 @@ export const teamMembers: TeamMember[] = [
 
 // Predefined tasks with point values
 export const tasks: Task[] = [
-    { id: "1", name: "Cold call", points: 1 },
-    { id: "2", name: "Discovery Call", points: 2 },
-    { id: "3", name: "Site Mockup", points: 10 },
-    { id: "4", name: "Site Design v1", points: 10 },
-    { id: "5", name: "Site Design Revisions", points: 10 },
-    { id: "6", name: "Published Site", points: 35 },
+    { id: "1", name: "Found a new lead", points: 1 },
+    { id: "2", name: "Made a new post", points: 11 },
+    { id: "3", name: "Sent media used in a post", points: 10 },
+    { id: "4", name: "Wrote caption used in a post", points: 5 },
+    { id: "5", name: "", points: 10 },
 ];
 
 // Point entries (empty for now - we'll add logging functionality next)
