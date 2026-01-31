@@ -1,15 +1,27 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import Image from "next/image";
-import { teamMembers, tasks } from "@/lib/data";
-import { PointEntry } from "@/lib/types";
-import { loadEntries, addEntry, deleteEntry, updateEntry } from "@/lib/storage";
+import { useSession } from "next-auth/react";
+import { tasks } from "@/lib/data";
+import { PointEntry, TeamMember } from "@/lib/types";
+import { loadEntries, addEntry, deleteEntry, updateEntry, restoreEntry } from "@/lib/storage";
+import { loadUsers, upsertUser } from "@/lib/users";
 import { getWeekStart, isInWeek } from "@/lib/dates";
 import { WeeklyLeaderboard, TimePeriod } from "@/components/WeeklyLeaderboard";
 import { ActivityFeed } from "@/components/ActivityFeed";
+import { ToastContainer, ToastData } from "@/components/Toast";
+import { SignOutButton } from "@/components/SignOutButton";
+import {
+  LeaderboardSkeleton,
+  TeamSkeleton,
+  TasksSkeleton,
+  ActivitySkeleton,
+} from "@/components/Skeleton";
 
 export default function Home() {
+  const { data: session, status } = useSession();
+  const [users, setUsers] = useState<TeamMember[]>([]);
   const [entries, setEntries] = useState<PointEntry[]>([]);
   const [selectedMember, setSelectedMember] = useState("");
   const [selectedTask, setSelectedTask] = useState("");
@@ -18,13 +30,38 @@ export default function Home() {
   const [lastEntry, setLastEntry] = useState<{ memberName: string; taskName: string; points: number; quantity: number } | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [timePeriod, setTimePeriod] = useState<TimePeriod>("week");
+  const [toasts, setToasts] = useState<ToastData[]>([]);
+  const previousLeaderRef = useRef<string | null>(null);
 
-  // Load entries from localStorage on mount
+  // Load entries and users from database on mount
   useEffect(() => {
-    const stored = loadEntries();
-    setEntries(stored);
-    setIsLoaded(true);
+    async function loadData() {
+      const [storedEntries, storedUsers] = await Promise.all([
+        loadEntries(),
+        loadUsers(),
+      ]);
+      setEntries(storedEntries);
+      setUsers(storedUsers);
+      setIsLoaded(true);
+    }
+    loadData();
   }, []);
+
+  // Auto-register user when they sign in
+  useEffect(() => {
+    async function registerUser() {
+      if (status === "authenticated" && session?.user?.email) {
+        const currentUser: TeamMember = {
+          id: session.user.email,
+          name: session.user.name || session.user.email.split("@")[0],
+          avatar: session.user.image || undefined,
+        };
+        const updatedUsers = await upsertUser(currentUser);
+        setUsers(updatedUsers);
+      }
+    }
+    registerUser();
+  }, [session, status]);
 
   // Filter entries based on time period
   const weekStart = getWeekStart();
@@ -45,7 +82,71 @@ export default function Home() {
       }, 0);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Get current leader (member with most points)
+  const getCurrentLeader = useCallback((entriesList: PointEntry[]) => {
+    const weekStartDate = getWeekStart();
+    const relevantEntries = timePeriod === "week"
+      ? entriesList.filter((entry) => isInWeek(entry.timestamp, weekStartDate))
+      : entriesList;
+
+    let maxPoints = 0;
+    let leader: string | null = null;
+
+    users.forEach((member) => {
+      const points = relevantEntries
+        .filter((entry) => entry.memberId === member.id)
+        .reduce((total, entry) => {
+          const task = tasks.find((t) => t.id === entry.taskId);
+          return total + (task?.points || 0) * entry.quantity;
+        }, 0);
+
+      if (points > maxPoints) {
+        maxPoints = points;
+        leader = member.id;
+      }
+    });
+
+    return { leaderId: leader, points: maxPoints };
+  }, [timePeriod, users]);
+
+  // Show toast
+  const showToast = useCallback((toast: Omit<ToastData, "id">) => {
+    const id = Date.now().toString();
+    setToasts((prev) => [...prev, { ...toast, id }]);
+  }, []);
+
+  // Dismiss toast
+  const dismissToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  // Check for leader change and show celebration
+  const checkLeaderChange = useCallback((newEntries: PointEntry[]) => {
+    const { leaderId, points } = getCurrentLeader(newEntries);
+
+    if (leaderId && points > 0 && previousLeaderRef.current !== null && leaderId !== previousLeaderRef.current) {
+      const newLeader = users.find((m) => m.id === leaderId);
+      if (newLeader) {
+        showToast({
+          message: `${newLeader.name} takes the lead!`,
+          type: "celebration",
+          duration: 4000,
+        });
+      }
+    }
+
+    previousLeaderRef.current = leaderId;
+  }, [getCurrentLeader, showToast, users]);
+
+  // Initialize leader tracking after entries load
+  useEffect(() => {
+    if (isLoaded && entries.length > 0 && previousLeaderRef.current === null) {
+      const { leaderId } = getCurrentLeader(entries);
+      previousLeaderRef.current = leaderId;
+    }
+  }, [isLoaded, entries, getCurrentLeader]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedMember || !selectedTask || quantity < 1) return;
 
@@ -57,13 +158,16 @@ export default function Home() {
       timestamp: new Date(),
     };
 
-    const member = teamMembers.find((m) => m.id === selectedMember);
+    const member = users.find((m) => m.id === selectedMember);
     const task = tasks.find((t) => t.id === selectedTask);
     const totalPoints = (task?.points || 0) * quantity;
 
-    // Save to localStorage and update state
-    const updatedEntries = addEntry(newEntry);
+    // Save to database and update state
+    const updatedEntries = await addEntry(newEntry);
     setEntries(updatedEntries);
+
+    // Check if leader changed
+    checkLeaderChange(updatedEntries);
 
     setLastEntry({
       memberName: member?.name || "",
@@ -80,13 +184,40 @@ export default function Home() {
     setTimeout(() => setShowSuccess(false), 3000);
   };
 
-  const handleDeleteEntry = (id: string) => {
-    const updatedEntries = deleteEntry(id);
+  const handleDeleteEntry = async (id: string) => {
+    // Find the entry before deleting
+    const entryToDelete = entries.find((e) => e.id === id);
+    if (!entryToDelete) return;
+
+    const member = users.find((m) => m.id === entryToDelete.memberId);
+    const task = tasks.find((t) => t.id === entryToDelete.taskId);
+
+    // Delete immediately
+    const updatedEntries = await deleteEntry(id);
     setEntries(updatedEntries);
+
+    // Check if leader changed
+    checkLeaderChange(updatedEntries);
+
+    // Show undo toast
+    showToast({
+      message: `Deleted ${member?.name}'s ${task?.name}`,
+      type: "undo",
+      duration: 5000,
+      action: {
+        label: "Undo",
+        onClick: async () => {
+          // Restore the entry
+          const restored = await restoreEntry(entryToDelete);
+          setEntries(restored);
+          checkLeaderChange(restored);
+        },
+      },
+    });
   };
 
-  const handleUpdateEntry = (id: string, updates: Partial<Omit<PointEntry, "id">>) => {
-    const updatedEntries = updateEntry(id, updates);
+  const handleUpdateEntry = async (id: string, updates: Partial<Omit<PointEntry, "id">>) => {
+    const updatedEntries = await updateEntry(id, updates);
     setEntries(updatedEntries);
   };
 
@@ -110,11 +241,27 @@ export default function Home() {
             <p className="text-muted text-xs">Team Points Tracker</p>
           </div>
         </div>
-        <div className="text-right text-sm text-muted">
-          <div className="font-medium text-foreground">Quango Inc</div>
-          <div className="text-xs mt-0.5">
-            {isLoaded && totalEntries > 0 ? `${totalEntries} entries logged` : "Internal Tool"}
+        <div className="flex items-center gap-4">
+          <div className="text-right text-sm text-muted hidden sm:block">
+            <div className="font-medium text-foreground">Quango Inc</div>
+            <div className="text-xs mt-0.5">
+              {isLoaded && totalEntries > 0 ? `${totalEntries} entries logged` : "Internal Tool"}
+            </div>
           </div>
+          {session?.user && (
+            <div className="flex items-center gap-3 pl-4 border-l border-border">
+              {session.user.image && (
+                <Image
+                  src={session.user.image}
+                  alt={session.user.name || "User"}
+                  width={32}
+                  height={32}
+                  className="rounded-full"
+                />
+              )}
+              <SignOutButton />
+            </div>
+          )}
         </div>
       </header>
 
@@ -134,7 +281,7 @@ export default function Home() {
               className="w-full bg-background border border-border rounded-lg px-4 py-3 text-foreground focus:outline-none focus:border-crimson transition-colors appearance-none cursor-pointer"
             >
               <option value="">Select member...</option>
-              {teamMembers.map((member) => (
+              {users.map((member) => (
                 <option key={member.id} value={member.id}>
                   {member.name}
                 </option>
@@ -214,17 +361,19 @@ export default function Home() {
       </section>
 
       {/* Leaderboard Charts */}
-      {isLoaded && (
-        <div className="mb-10">
+      <div className="mb-10">
+        {isLoaded ? (
           <WeeklyLeaderboard
             entries={entries}
-            teamMembers={teamMembers}
+            teamMembers={users}
             tasks={tasks}
             timePeriod={timePeriod}
             onTimePeriodChange={setTimePeriod}
           />
-        </div>
-      )}
+        ) : (
+          <LeaderboardSkeleton />
+        )}
+      </div>
 
       <div className="grid md:grid-cols-2 gap-10">
         {/* Team Members Section */}
@@ -240,7 +389,7 @@ export default function Home() {
           </div>
 
           <div className="space-y-1">
-            {teamMembers.map((member, index) => {
+            {users.map((member, index) => {
               const points = getPointsForMember(member.id);
               return (
                 <div
@@ -299,18 +448,20 @@ export default function Home() {
       </div>
 
       {/* Activity Feed */}
-      {isLoaded && (
-        <div className="mt-10">
+      <div className="mt-10">
+        {isLoaded ? (
           <ActivityFeed
             entries={entries}
-            teamMembers={teamMembers}
+            teamMembers={users}
             tasks={tasks}
             limit={15}
             onDelete={handleDeleteEntry}
             onUpdate={handleUpdateEntry}
           />
-        </div>
-      )}
+        ) : (
+          <ActivitySkeleton />
+        )}
+      </div>
 
       {/* Footer */}
       <footer className="mt-12 pt-8 border-t border-border flex justify-between items-center text-sm text-muted animate-fade-in stagger-5">
@@ -329,6 +480,9 @@ export default function Home() {
           <span>v0.1</span>
         </div>
       </footer>
+
+      {/* Toast notifications */}
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </main>
   );
 }

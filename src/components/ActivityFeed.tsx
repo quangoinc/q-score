@@ -30,7 +30,6 @@ export function ActivityFeed({
   onUpdate,
 }: ActivityFeedProps) {
   const [editingEntry, setEditingEntry] = useState<EditingState | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Get member by ID
   const getMember = (memberId: string): TeamMember | undefined => {
@@ -56,7 +55,6 @@ export function ActivityFeed({
       taskId: entry.taskId,
       quantity: entry.quantity,
     });
-    setDeletingId(null);
   };
 
   const handleEditSave = () => {
@@ -75,19 +73,10 @@ export function ActivityFeed({
   };
 
   const handleDeleteClick = (id: string) => {
-    setDeletingId(id);
-    setEditingEntry(null);
-  };
-
-  const handleDeleteConfirm = () => {
-    if (deletingId && onDelete) {
-      onDelete(deletingId);
+    if (onDelete) {
+      onDelete(id);
     }
-    setDeletingId(null);
-  };
-
-  const handleDeleteCancel = () => {
-    setDeletingId(null);
+    setEditingEntry(null);
   };
 
   if (recentEntries.length === 0) {
@@ -119,7 +108,6 @@ export function ActivityFeed({
           const points = (task?.points || 0) * entry.quantity;
           const taskName = task?.name || "Unknown Task";
           const isEditing = editingEntry?.id === entry.id;
-          const isDeleting = deletingId === entry.id;
 
           if (isEditing && editingEntry) {
             return (
@@ -197,37 +185,6 @@ export function ActivityFeed({
             );
           }
 
-          if (isDeleting) {
-            return (
-              <div
-                key={entry.id}
-                className="flex items-center justify-between px-5 py-4 bg-crimson/5 border-l-2 border-l-crimson"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-muted">Delete this entry?</span>
-                  <span className="text-sm text-foreground">
-                    {memberName} · {taskName}
-                    {entry.quantity > 1 && ` ×${entry.quantity}`}
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleDeleteConfirm}
-                    className="px-3 py-1.5 bg-crimson text-white text-xs font-medium rounded-md hover:bg-crimson-dark transition-colors"
-                  >
-                    Delete
-                  </button>
-                  <button
-                    onClick={handleDeleteCancel}
-                    className="px-3 py-1.5 bg-card border border-border text-muted text-xs font-medium rounded-md hover:text-foreground hover:border-muted transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            );
-          }
-
           return (
             <div
               key={entry.id}
@@ -268,7 +225,7 @@ export function ActivityFeed({
 
               <div className="flex items-center gap-3">
                 {(onUpdate || onDelete) && (
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                     {onUpdate && (
                       <button
                         onClick={() => handleEditClick(entry)}
