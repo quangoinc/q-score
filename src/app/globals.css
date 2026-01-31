@@ -8,7 +8,8 @@
   --muted: #737373;
   --card: #141414;
   --border: #262626;
-  --accent: #ffffff;
+  --crimson: #C41E3A;
+  --crimson-dark: #9B1B30;
 }
 
 @theme inline {
@@ -17,7 +18,8 @@
   --color-muted: var(--muted);
   --color-card: var(--card);
   --color-border: var(--border);
-  --color-accent: var(--accent);
+  --color-crimson: var(--crimson);
+  --color-crimson-dark: var(--crimson-dark);
 }
 
 body {
@@ -27,8 +29,8 @@ body {
 }
 
 ::selection {
-  background: var(--foreground);
-  color: var(--background);
+  background: var(--crimson);
+  color: var(--foreground);
 }
 
 /* Staggered animation delays */
@@ -61,11 +63,18 @@ body {
   letter-spacing: -0.02em;
 }
 
-/* ASCII decorative divider */
-.divider-dots::before {
-  content: "· · · · · · · · · · · · · · · · · · · ·";
-  display: block;
-  color: var(--muted);
-  letter-spacing: 0.1em;
-  font-size: 0.75rem;
+/* Crimson gradient glow */
+.crimson-glow {
+  box-shadow: 0 0 40px rgba(196, 30, 58, 0.15);
+}
+
+/* Hide number input spinners */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
 }

@@ -3,6 +3,7 @@
 export interface TeamMember {
   id: string;
   name: string;
+  avatar?: string;
 }
 
 export interface Task {
@@ -15,5 +16,6 @@ export interface PointEntry {
   id: string;
   memberId: string;
   taskId: string;
+  quantity: number;
   timestamp: Date;
 }
