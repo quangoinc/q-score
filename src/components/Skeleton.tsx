@@ -42,51 +42,6 @@ export function LeaderboardSkeleton() {
   );
 }
 
-export function TeamSkeleton() {
-  return (
-    <div className="animate-fade-in stagger-2">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Skeleton className="w-20 h-4" />
-          <Skeleton className="w-16 h-6" />
-        </div>
-        <Skeleton className="w-16 h-4" />
-      </div>
-      <div className="space-y-1">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="flex items-center justify-between py-3 px-4">
-            <div className="flex items-center gap-3">
-              <Skeleton className="w-5 h-4" />
-              <Skeleton className="w-7 h-7 rounded-full" />
-              <Skeleton className="w-20 h-5" />
-            </div>
-            <Skeleton className="w-12 h-5" />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export function TasksSkeleton() {
-  return (
-    <div className="animate-fade-in stagger-3">
-      <div className="flex items-center gap-3 mb-6">
-        <Skeleton className="w-20 h-4" />
-        <Skeleton className="w-16 h-6" />
-      </div>
-      <div className="space-y-1">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="flex items-center justify-between py-3 px-4">
-            <Skeleton className="w-28 h-5" />
-            <Skeleton className="w-12 h-7 rounded-full" />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export function ActivitySkeleton() {
   return (
     <div className="animate-fade-in stagger-5">

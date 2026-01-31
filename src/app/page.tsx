@@ -14,8 +14,6 @@ import { ToastContainer, ToastData } from "@/components/Toast";
 import { SignOutButton } from "@/components/SignOutButton";
 import {
   LeaderboardSkeleton,
-  TeamSkeleton,
-  TasksSkeleton,
   ActivitySkeleton,
 } from "@/components/Skeleton";
 import { SearchableTaskSelect } from "@/components/SearchableTaskSelect";

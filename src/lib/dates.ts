@@ -11,15 +11,6 @@ export function getWeekStart(date: Date = new Date()): Date {
   return d;
 }
 
-// Get the end of the current week (Sunday at 23:59:59)
-export function getWeekEnd(date: Date = new Date()): Date {
-  const start = getWeekStart(date);
-  const end = new Date(start);
-  end.setDate(end.getDate() + 6);
-  end.setHours(23, 59, 59, 999);
-  return end;
-}
-
 // Get array of dates for the current week (Mon-Sun)
 export function getWeekDays(date: Date = new Date()): Date[] {
   const start = getWeekStart(date);
@@ -35,14 +26,6 @@ export function getWeekDays(date: Date = new Date()): Date[] {
 // Format date as short day name
 export function formatDayShort(date: Date): string {
   return date.toLocaleDateString("en-US", { weekday: "short" });
-}
-
-// Format date as "Mon 1/27"
-export function formatDayWithDate(date: Date): string {
-  const day = date.toLocaleDateString("en-US", { weekday: "short" });
-  const month = date.getMonth() + 1;
-  const dayNum = date.getDate();
-  return `${day} ${month}/${dayNum}`;
 }
 
 // Check if a date falls within a given week

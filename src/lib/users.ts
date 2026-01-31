@@ -36,22 +36,3 @@ export async function upsertUser(user: TeamMember): Promise<TeamMember[]> {
 
   return loadUsers();
 }
-
-// Get a user by ID
-export async function getUser(id: string): Promise<TeamMember | undefined> {
-  const { data, error } = await supabase
-    .from("users")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (error || !data) {
-    return undefined;
-  }
-
-  return {
-    id: data.id,
-    name: data.name,
-    avatar: data.avatar || undefined,
-  };
-}
