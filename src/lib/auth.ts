@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 
 const ALLOWED_DOMAIN = "quangoinc.com";
-const ALLOWED_EMAILS = ["almondmil.kk4@gmail.com"];
+const ALLOWED_EMAILS = ["almondmil.kk4@gmail.com", "gageprod@gmail.com"];
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [

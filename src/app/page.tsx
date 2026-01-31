@@ -18,6 +18,7 @@ import {
   TasksSkeleton,
   ActivitySkeleton,
 } from "@/components/Skeleton";
+import { SearchableTaskSelect } from "@/components/SearchableTaskSelect";
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -266,7 +267,7 @@ export default function Home() {
       </header>
 
       {/* Log Points Form */}
-      <section className="mb-10 p-6 bg-card/50 border border-border rounded-xl crimson-glow animate-fade-in stagger-1">
+      <section className="mb-10 p-6 bg-card/50 border border-border rounded-xl crimson-glow animate-fade-in stagger-1 relative z-50">
         <div className="flex items-center gap-3 mb-6">
           <span className="text-crimson text-sm font-medium">—— [ 00 ]</span>
           <h2 className="text-lg font-semibold">Log Points</h2>
@@ -291,18 +292,11 @@ export default function Home() {
 
           <div className="flex-1 min-w-[180px]">
             <label className="block text-sm text-muted mb-2">Task Completed</label>
-            <select
+            <SearchableTaskSelect
+              tasks={tasks}
               value={selectedTask}
-              onChange={(e) => setSelectedTask(e.target.value)}
-              className="w-full bg-background border border-border rounded-lg px-4 py-3 text-foreground focus:outline-none focus:border-crimson transition-colors appearance-none cursor-pointer"
-            >
-              <option value="">Select task...</option>
-              {tasks.map((task) => (
-                <option key={task.id} value={task.id}>
-                  {task.name} (+{task.points} pts)
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedTask}
+            />
           </div>
 
           <div>
@@ -432,7 +426,7 @@ export default function Home() {
           </div>
 
           <div className="space-y-1">
-            {tasks.map((task) => (
+            {[...tasks].sort((a, b) => b.points - a.points).map((task) => (
               <div
                 key={task.id}
                 className="group flex items-center justify-between py-3 px-4 rounded-lg hover:bg-card/50 transition-colors"
