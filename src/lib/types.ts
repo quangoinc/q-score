@@ -20,4 +20,8 @@ export interface PointEntry {
   taskId: string;
   quantity: number;
   timestamp: Date;
+  dailyBonus?: boolean;
 }
+
+// Daily bonus points for first task of the day
+export const DAILY_BONUS_POINTS = 50;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { PointEntry, TeamMember, Task } from "@/lib/types";
+import { PointEntry, TeamMember, Task, DAILY_BONUS_POINTS } from "@/lib/types";
 import { Que } from "@/components/Que";
 import { formatTimeAgo } from "@/lib/dates";
 
@@ -105,7 +105,9 @@ export function ActivityFeed({
           const task = getTask(entry.taskId);
           const member = getMember(entry.memberId);
           const memberName = member?.name || "Unknown";
-          const points = (task?.points || 0) * entry.quantity;
+          const basePoints = (task?.points || 0) * entry.quantity;
+          const bonusPoints = entry.dailyBonus ? DAILY_BONUS_POINTS : 0;
+          const totalPoints = basePoints + bonusPoints;
           const taskName = task?.name || "Unknown Task";
           const isEditing = editingEntry?.id === entry.id;
 
@@ -269,8 +271,15 @@ export function ActivityFeed({
                     )}
                   </div>
                 )}
-                <div className="text-crimson font-semibold whitespace-nowrap">
-                  +{points} pts
+                <div className="text-right whitespace-nowrap">
+                  {entry.dailyBonus && (
+                    <div className="text-xs text-amber-400 font-medium">
+                      +{DAILY_BONUS_POINTS} daily bonus
+                    </div>
+                  )}
+                  <div className="text-crimson font-semibold">
+                    +{totalPoints} pts
+                  </div>
                 </div>
               </div>
             </div>

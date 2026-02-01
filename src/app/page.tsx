@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { tasks } from "@/lib/data";
-import { PointEntry, TeamMember } from "@/lib/types";
+import { PointEntry, TeamMember, DAILY_BONUS_POINTS } from "@/lib/types";
 import { loadEntries, addEntry, deleteEntry, updateEntry, restoreEntry } from "@/lib/storage";
 import { loadUsers, upsertUser } from "@/lib/users";
 import { getWeekStart, isInWeek } from "@/lib/dates";
@@ -80,7 +80,9 @@ export default function Home() {
       .filter((entry) => entry.memberId === memberId)
       .reduce((total, entry) => {
         const task = tasks.find((t) => t.id === entry.taskId);
-        return total + (task?.points || 0) * entry.quantity;
+        const basePoints = (task?.points || 0) * entry.quantity;
+        const bonus = entry.dailyBonus ? DAILY_BONUS_POINTS : 0;
+        return total + basePoints + bonus;
       }, 0);
   };
 
@@ -99,7 +101,9 @@ export default function Home() {
         .filter((entry) => entry.memberId === member.id)
         .reduce((total, entry) => {
           const task = tasks.find((t) => t.id === entry.taskId);
-          return total + (task?.points || 0) * entry.quantity;
+          const basePoints = (task?.points || 0) * entry.quantity;
+          const bonus = entry.dailyBonus ? DAILY_BONUS_POINTS : 0;
+          return total + basePoints + bonus;
         }, 0);
 
       if (points > maxPoints) {

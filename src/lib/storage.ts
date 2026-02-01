@@ -19,11 +19,38 @@ export async function loadEntries(): Promise<PointEntry[]> {
     taskId: entry.task_id,
     quantity: entry.quantity,
     timestamp: new Date(entry.timestamp),
+    dailyBonus: entry.daily_bonus || false,
   }));
+}
+
+// Check if this is the first entry of the day for a member
+async function isFirstEntryOfDay(memberId: string, date: Date): Promise<boolean> {
+  const startOfDay = new Date(date);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(date);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const { data, error } = await supabase
+    .from("entries")
+    .select("id")
+    .eq("member_id", memberId)
+    .gte("timestamp", startOfDay.toISOString())
+    .lte("timestamp", endOfDay.toISOString())
+    .limit(1);
+
+  if (error) {
+    console.error("Failed to check daily entries:", error);
+    return false;
+  }
+
+  return !data || data.length === 0;
 }
 
 // Add a single entry
 export async function addEntry(entry: PointEntry): Promise<PointEntry[]> {
+  // Check if this qualifies for daily bonus
+  const dailyBonus = await isFirstEntryOfDay(entry.memberId, entry.timestamp);
+
   const { error } = await supabase
     .from("entries")
     .insert({
@@ -32,6 +59,7 @@ export async function addEntry(entry: PointEntry): Promise<PointEntry[]> {
       task_id: entry.taskId,
       quantity: entry.quantity,
       timestamp: entry.timestamp.toISOString(),
+      daily_bonus: dailyBonus,
     });
 
   if (error) {

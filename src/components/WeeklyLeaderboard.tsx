@@ -12,7 +12,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { PointEntry, TeamMember, Task } from "@/lib/types";
+import { PointEntry, TeamMember, Task, DAILY_BONUS_POINTS } from "@/lib/types";
 import { getWeekStart, getWeekDays, formatDayShort, isInWeek, isUpToToday } from "@/lib/dates";
 import { Que } from "@/components/Que";
 
@@ -53,9 +53,11 @@ export function WeeklyLeaderboard({
     MEMBER_COLORS[member.id] = COLOR_PALETTE[index % COLOR_PALETTE.length];
   });
 
-  // Get task points by ID
-  const getTaskPoints = (taskId: string): number => {
-    return tasks.find((t) => t.id === taskId)?.points || 0;
+  // Get total points for an entry (task points + daily bonus)
+  const getEntryPoints = (entry: PointEntry): number => {
+    const taskPoints = tasks.find((t) => t.id === entry.taskId)?.points || 0;
+    const bonus = entry.dailyBonus ? DAILY_BONUS_POINTS : 0;
+    return taskPoints * entry.quantity + bonus;
   };
 
   // Filter entries based on time period
@@ -95,7 +97,7 @@ export function WeeklyLeaderboard({
         teamMembers.forEach((member) => {
           const cumulativePoints = weekEntries
             .filter((entry) => entry.memberId === member.id && entry.timestamp <= dayEnd)
-            .reduce((sum, entry) => sum + getTaskPoints(entry.taskId) * entry.quantity, 0);
+            .reduce((sum, entry) => sum + getEntryPoints(entry), 0);
           dataPoint[member.name] = cumulativePoints;
         });
 
@@ -137,7 +139,7 @@ export function WeeklyLeaderboard({
       teamMembers.forEach((member) => {
         const cumulativePoints = entries
           .filter((entry) => entry.memberId === member.id && entry.timestamp < weekEnd)
-          .reduce((sum, entry) => sum + getTaskPoints(entry.taskId) * entry.quantity, 0);
+          .reduce((sum, entry) => sum + getEntryPoints(entry), 0);
         dataPoint[member.name] = cumulativePoints;
       });
 
@@ -154,7 +156,7 @@ export function WeeklyLeaderboard({
       .map((member) => {
         const totalPoints = filteredEntries
           .filter((entry) => entry.memberId === member.id)
-          .reduce((sum, entry) => sum + getTaskPoints(entry.taskId) * entry.quantity, 0);
+          .reduce((sum, entry) => sum + getEntryPoints(entry), 0);
 
         return {
           name: member.name,
