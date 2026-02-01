@@ -18,6 +18,7 @@ import {
 } from "@/components/Skeleton";
 import { SearchableTaskSelect } from "@/components/SearchableTaskSelect";
 import { Que } from "@/components/Que";
+import { ProfileSettings } from "@/components/ProfileSettings";
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -32,6 +33,7 @@ export default function Home() {
   const [timePeriod, setTimePeriod] = useState<TimePeriod>("week");
   const [toasts, setToasts] = useState<ToastData[]>([]);
   const previousLeaderRef = useRef<string | null>(null);
+  const [showProfileSettings, setShowProfileSettings] = useState(false);
 
   // Load entries and users from database on mount
   useEffect(() => {
@@ -227,7 +229,7 @@ export default function Home() {
   return (
     <main className="min-h-screen px-6 py-8 md:px-12 md:py-12 max-w-5xl mx-auto">
       {/* Header */}
-      <header className="flex justify-between items-center mb-12 animate-fade-in">
+      <header className="flex justify-between items-center mb-12 animate-fade-in relative z-[60]">
         <div className="flex items-center gap-4">
           <Image
             src="/white-que.png"
@@ -253,12 +255,28 @@ export default function Home() {
               {(() => {
                 const currentUser = users.find((u) => u.id === session.user?.email);
                 return currentUser ? (
-                  <Que
-                    fill={currentUser.color || "#737373"}
-                    face={currentUser.face}
-                    width={32}
-                    height={32}
-                  />
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowProfileSettings(!showProfileSettings)}
+                      className="group flex items-center gap-2 px-2 py-1.5 -mx-2 rounded-lg hover:bg-card/50 transition-all focus:outline-none focus:ring-2 focus:ring-crimson"
+                      title="Customize your Que"
+                    >
+                      <Que
+                        fill={currentUser.color || "#737373"}
+                        face={currentUser.face}
+                        width={32}
+                        height={32}
+                      />
+                      <span className="text-xs text-muted group-hover:text-foreground transition-colors">Edit</span>
+                    </button>
+                    {showProfileSettings && (
+                      <ProfileSettings
+                        user={currentUser}
+                        onClose={() => setShowProfileSettings(false)}
+                        onSave={(updatedUsers) => setUsers(updatedUsers)}
+                      />
+                    )}
+                  </div>
                 ) : null;
               })()}
               <SignOutButton />

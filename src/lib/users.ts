@@ -2,7 +2,7 @@ import { TeamMember } from "./types";
 import { supabase } from "./supabase";
 
 // Vibrant color palette for dark theme backgrounds
-const QUE_COLORS = [
+export const QUE_COLORS = [
   "#E85D75", // rose
   "#F59E0B", // amber
   "#10B981", // emerald
@@ -16,7 +16,7 @@ const QUE_COLORS = [
 ];
 
 // Number of face variants available
-const FACE_VARIANT_COUNT = 10;
+export const FACE_VARIANT_COUNT = 10;
 
 // Get the next available color from the palette
 function getNextColor(existingColors: (string | undefined)[]): string {
@@ -106,6 +106,23 @@ export async function upsertUser(user: TeamMember): Promise<TeamMember[]> {
 
   if (error) {
     console.error("Failed to upsert user:", error);
+  }
+
+  return loadUsers();
+}
+
+// Update user profile (color and face only)
+export async function updateUserProfile(
+  userId: string,
+  updates: { color?: string; face?: number }
+): Promise<TeamMember[]> {
+  const { error } = await supabase
+    .from("users")
+    .update(updates)
+    .eq("id", userId);
+
+  if (error) {
+    console.error("Failed to update user profile:", error);
   }
 
   return loadUsers();
