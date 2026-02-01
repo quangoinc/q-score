@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Image from "next/image";
 import {
   LineChart,
   Line,
@@ -15,6 +14,7 @@ import {
 } from "recharts";
 import { PointEntry, TeamMember, Task } from "@/lib/types";
 import { getWeekStart, getWeekDays, formatDayShort, isInWeek, isUpToToday } from "@/lib/dates";
+import { Que } from "@/components/Que";
 
 export type TimePeriod = "week" | "all";
 
@@ -166,52 +166,39 @@ export function WeeklyLeaderboard({
       .sort((a, b) => b.points - a.points);
   }, [filteredEntries, teamMembers, tasks]);
 
-  // Custom X-axis tick with avatar for bar chart
+  // Custom X-axis tick with Que avatar for bar chart
   const AvatarAxisTick = ({ x, y, payload }: any) => {
-    const member = barChartData.find((d) => d.name === payload.value);
+    const memberData = barChartData.find((d) => d.name === payload.value);
+    const member = teamMembers.find((m) => m.name === payload.value);
     return (
       <g transform={`translate(${x},${y})`}>
-        {member?.avatar ? (
-          <foreignObject x={-14} y={4} width={28} height={28}>
-            <Image
-              src={member.avatar}
-              alt={member.name}
-              width={28}
-              height={28}
-              className="rounded-full object-cover"
-              style={{ borderRadius: "50%" }}
-            />
-          </foreignObject>
-        ) : (
-          <circle cx={0} cy={18} r={14} fill="#141414" stroke="#262626" />
-        )}
+        <foreignObject x={-14} y={4} width={28} height={28}>
+          <Que
+            fill={member?.color || memberData?.fill || "#737373"}
+            face={member?.face}
+            width={28}
+            height={28}
+          />
+        </foreignObject>
       </g>
     );
   };
 
-  // Custom legend with avatars for line chart
+  // Custom legend with Que avatars for line chart
   const AvatarLegend = () => (
     <div className="flex flex-wrap justify-center gap-4 pt-3">
       {teamMembers.map((member) => (
         <div key={member.id} className="flex items-center gap-2">
-          {member.avatar ? (
-            <Image
-              src={member.avatar}
-              alt={member.name}
-              width={20}
-              height={20}
-              className="rounded-full object-cover"
-            />
-          ) : (
-            <div
-              className="w-5 h-5 rounded-full"
-              style={{ backgroundColor: MEMBER_COLORS[member.id] }}
-            />
-          )}
+          <Que
+            fill={member.color || MEMBER_COLORS[member.id]}
+            face={member.face}
+            width={20}
+            height={20}
+          />
           <span className="text-xs text-muted">{member.name}</span>
           <div
             className="w-3 h-0.5 rounded"
-            style={{ backgroundColor: MEMBER_COLORS[member.id] }}
+            style={{ backgroundColor: member.color || MEMBER_COLORS[member.id] }}
           />
         </div>
       ))}

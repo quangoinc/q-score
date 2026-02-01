@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Image from "next/image";
 import { PointEntry, TeamMember, Task } from "@/lib/types";
+import { Que } from "@/components/Que";
 import { formatTimeAgo } from "@/lib/dates";
 
 interface ActivityFeedProps {
@@ -191,19 +191,13 @@ export function ActivityFeed({
               className="group flex items-center justify-between px-5 py-4 hover:bg-card/50 transition-colors"
             >
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                {member?.avatar ? (
-                  <Image
-                    src={member.avatar}
-                    alt={memberName}
-                    width={32}
-                    height={32}
-                    className="rounded-full object-cover flex-shrink-0"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-xs text-muted flex-shrink-0">
-                    {memberName.charAt(0)}
-                  </div>
-                )}
+                <Que
+                  fill={member?.color || "#737373"}
+                  face={member?.face}
+                  width={32}
+                  height={32}
+                  className="flex-shrink-0"
+                />
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-medium text-foreground">

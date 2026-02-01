@@ -4,6 +4,8 @@ export interface TeamMember {
   id: string;
   name: string;
   avatar?: string;
+  color?: string;
+  face?: number;
 }
 
 export interface Task {

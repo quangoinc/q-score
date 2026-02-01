@@ -17,6 +17,7 @@ import {
   ActivitySkeleton,
 } from "@/components/Skeleton";
 import { SearchableTaskSelect } from "@/components/SearchableTaskSelect";
+import { Que } from "@/components/Que";
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -249,15 +250,17 @@ export default function Home() {
           </div>
           {session?.user && (
             <div className="flex items-center gap-3 pl-4 border-l border-border">
-              {session.user.image && (
-                <Image
-                  src={session.user.image}
-                  alt={session.user.name || "User"}
-                  width={32}
-                  height={32}
-                  className="rounded-full"
-                />
-              )}
+              {(() => {
+                const currentUser = users.find((u) => u.id === session.user?.email);
+                return currentUser ? (
+                  <Que
+                    fill={currentUser.color || "#737373"}
+                    face={currentUser.face}
+                    width={32}
+                    height={32}
+                  />
+                ) : null;
+              })()}
               <SignOutButton />
             </div>
           )}
@@ -392,19 +395,12 @@ export default function Home() {
                     <span className="text-muted text-xs font-mono w-5">
                       {String(index + 1).padStart(2, "0")}
                     </span>
-                    {member.avatar ? (
-                      <Image
-                        src={member.avatar}
-                        alt={member.name}
-                        width={28}
-                        height={28}
-                        className="rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-7 h-7 rounded-full bg-card border border-border flex items-center justify-center text-xs text-muted">
-                        {member.name.charAt(0)}
-                      </div>
-                    )}
+                    <Que
+                      fill={member.color || "#737373"}
+                      face={member.face}
+                      width={28}
+                      height={28}
+                    />
                     <span className="font-medium">{member.name}</span>
                   </div>
                   <span className={points > 0 ? "text-crimson font-semibold" : "text-muted text-sm"}>
