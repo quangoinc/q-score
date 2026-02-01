@@ -7,6 +7,7 @@ import { tasks } from "@/lib/data";
 import { PointEntry, TeamMember, DAILY_BONUS_POINTS } from "@/lib/types";
 import { loadEntries, addEntry, deleteEntry, updateEntry, restoreEntry } from "@/lib/storage";
 import { loadUsers, upsertUser } from "@/lib/users";
+import { supabase } from "@/lib/supabase";
 import { getWeekStart, isInWeek } from "@/lib/dates";
 import { WeeklyLeaderboard, TimePeriod } from "@/components/WeeklyLeaderboard";
 import { ActivityFeed } from "@/components/ActivityFeed";
@@ -47,6 +48,41 @@ export default function Home() {
       setIsLoaded(true);
     }
     loadData();
+  }, []);
+
+  // Real-time subscriptions for live updates
+  useEffect(() => {
+    // Subscribe to entries changes
+    const entriesChannel = supabase
+      .channel("entries-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "entries" },
+        async () => {
+          const updatedEntries = await loadEntries();
+          setEntries(updatedEntries);
+        }
+      )
+      .subscribe();
+
+    // Subscribe to users changes (profile updates)
+    const usersChannel = supabase
+      .channel("users-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "users" },
+        async () => {
+          const updatedUsers = await loadUsers();
+          setUsers(updatedUsers);
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscriptions on unmount
+    return () => {
+      supabase.removeChannel(entriesChannel);
+      supabase.removeChannel(usersChannel);
+    };
   }, []);
 
   // Auto-register user when they sign in
