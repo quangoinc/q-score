@@ -2,6 +2,8 @@
 
 Internal team points tracking webapp for **Quango Inc**.
 
+**Live Site**: https://qscore.quangoinc.com/
+
 ## Tech Stack
 
 - **Framework**: Next.js 14+ (App Router)
