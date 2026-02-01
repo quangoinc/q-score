@@ -26,18 +26,15 @@ interface WeeklyLeaderboardProps {
   onTimePeriodChange: (period: TimePeriod) => void;
 }
 
-// Colors for each team member (crimson variations + complementary)
-const MEMBER_COLORS: Record<string, string> = {};
-const COLOR_PALETTE = [
-  "#C41E3A", // Crimson
-  "#E85D75", // Light crimson
-  "#4ECDC4", // Teal (contrast)
-  "#FFE66D", // Yellow (contrast)
-  "#8B1538", // Dark crimson
-  "#FF6B6B", // Coral
-];
+// Default color fallback
+const DEFAULT_COLOR = "#737373";
 
 type ViewMode = "line" | "bar";
+
+// Helper to get member color
+const getMemberColor = (member: TeamMember): string => {
+  return member.color || DEFAULT_COLOR;
+};
 
 export function WeeklyLeaderboard({
   entries,
@@ -47,11 +44,6 @@ export function WeeklyLeaderboard({
   onTimePeriodChange,
 }: WeeklyLeaderboardProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("line");
-
-  // Assign colors to members
-  teamMembers.forEach((member, index) => {
-    MEMBER_COLORS[member.id] = COLOR_PALETTE[index % COLOR_PALETTE.length];
-  });
 
   // Get total points for an entry (task points + daily bonus)
   const getEntryPoints = (entry: PointEntry): number => {
@@ -162,7 +154,7 @@ export function WeeklyLeaderboard({
           name: member.name,
           avatar: member.avatar,
           points: totalPoints,
-          fill: MEMBER_COLORS[member.id],
+          fill: getMemberColor(member),
         };
       })
       .sort((a, b) => b.points - a.points);
@@ -192,7 +184,7 @@ export function WeeklyLeaderboard({
       {teamMembers.map((member) => (
         <div key={member.id} className="flex items-center gap-2">
           <Que
-            fill={member.color || MEMBER_COLORS[member.id]}
+            fill={getMemberColor(member)}
             face={member.face}
             width={20}
             height={20}
@@ -200,7 +192,7 @@ export function WeeklyLeaderboard({
           <span className="text-xs text-muted">{member.name}</span>
           <div
             className="w-3 h-0.5 rounded"
-            style={{ backgroundColor: member.color || MEMBER_COLORS[member.id] }}
+            style={{ backgroundColor: getMemberColor(member) }}
           />
         </div>
       ))}
@@ -335,9 +327,9 @@ export function WeeklyLeaderboard({
                       key={member.id}
                       type="monotone"
                       dataKey={member.name}
-                      stroke={MEMBER_COLORS[member.id]}
+                      stroke={getMemberColor(member)}
                       strokeWidth={2}
-                      dot={{ fill: MEMBER_COLORS[member.id], r: 3 }}
+                      dot={{ fill: getMemberColor(member), r: 3 }}
                       activeDot={{ r: 5 }}
                     />
                   ))}

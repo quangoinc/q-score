@@ -406,7 +406,9 @@ export default function Home() {
           </div>
 
           <div className="space-y-1">
-            {users.map((member, index) => {
+            {[...users]
+              .sort((a, b) => getPointsForMember(b.id) - getPointsForMember(a.id))
+              .map((member, index) => {
               const points = getPointsForMember(member.id);
               return (
                 <div
