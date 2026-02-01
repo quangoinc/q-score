@@ -3,6 +3,7 @@ import { supabase } from "./supabase";
 
 // Vibrant color palette for dark theme backgrounds
 export const QUE_COLORS = [
+  "#C41E3A", // crimson (brand)
   "#E85D75", // rose
   "#F59E0B", // amber
   "#10B981", // emerald
@@ -12,7 +13,6 @@ export const QUE_COLORS = [
   "#06B6D4", // cyan
   "#F97316", // orange
   "#84CC16", // lime
-  "#6366F1", // indigo
 ];
 
 // Number of face variants available
