@@ -14,4 +14,6 @@ export const tasks: Task[] = [
     { id: "10", name: "Attended a conference or networking event", points: 100 },
     { id: "11", name: "Attended a discovery call", points: 20 },
     { id: "12", name: "Suggested a post idea", points: 20 },
+    { id: "13", name: "Fix something small", points: 2 },
+    { id: "14", name: "Did a walk-in", points: 30 },
 ];

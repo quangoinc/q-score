@@ -1,17 +1,16 @@
 // Date utilities for weekly calculations
 
-// Get the start of the current week (Monday at 00:00:00)
+// Get the start of the current week (Sunday at 00:00:00)
 export function getWeekStart(date: Date = new Date()): Date {
   const d = new Date(date);
   const day = d.getDay();
-  // Adjust so Monday = 0, Sunday = 6
-  const diff = day === 0 ? -6 : 1 - day;
-  d.setDate(d.getDate() + diff);
+  // Sunday = 0 in JS, so just go back 'day' days to reach Sunday
+  d.setDate(d.getDate() - day);
   d.setHours(0, 0, 0, 0);
   return d;
 }
 
-// Get array of dates for the current week (Mon-Sun)
+// Get array of dates for the current week (Sun-Sat)
 export function getWeekDays(date: Date = new Date()): Date[] {
   const start = getWeekStart(date);
   const days: Date[] = [];

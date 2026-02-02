@@ -14,7 +14,8 @@
       "Bash(openssl rand:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd Google OAuth, Supabase database, PWA support, and loading skeletons\n\nAuth:\n- Google OAuth with @quangoinc.com domain restriction\n- Auto-register users from Google profile \\(name, avatar\\)\n- Protected routes with middleware\n- Sign out button in header\n\nDatabase:\n- Supabase integration for users and entries\n- Replaced localStorage with database calls\n- Async data loading with proper state management\n\nPWA:\n- Manifest.json with app metadata\n- App icons \\(192px, 512px\\)\n- Apple Web App support\n\nUI:\n- Loading skeleton components\n- Toast notifications for undo/celebrations\n- Mobile-friendly edit/delete buttons \\(always visible on touch\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(del \"\\\\?\\\\C:\\\\Users\\\\gagep\\\\Work Projects\\\\q-score\\\\nul\")",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git push)"
     ]
   }
 }
