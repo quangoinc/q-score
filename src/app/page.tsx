@@ -8,7 +8,7 @@ import { PointEntry, TeamMember, DAILY_BONUS_POINTS } from "@/lib/types";
 import { loadEntries, addEntry, deleteEntry, updateEntry, restoreEntry } from "@/lib/storage";
 import { loadUsers, upsertUser } from "@/lib/users";
 import { supabase } from "@/lib/supabase";
-import { getWeekStart, isInWeek } from "@/lib/dates";
+import { getWeekStart, getLastWeekStart, isInWeek } from "@/lib/dates";
 import { WeeklyLeaderboard, TimePeriod } from "@/components/WeeklyLeaderboard";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { ToastContainer, ToastData } from "@/components/Toast";
@@ -105,12 +105,16 @@ export default function Home() {
 
   // Filter entries based on time period
   const weekStart = getWeekStart();
+  const lastWeekStart = getLastWeekStart();
   const filteredEntries = useMemo(() => {
     if (timePeriod === "week") {
       return entries.filter((entry) => isInWeek(entry.timestamp, weekStart));
     }
+    if (timePeriod === "lastWeek") {
+      return entries.filter((entry) => isInWeek(entry.timestamp, lastWeekStart));
+    }
     return entries;
-  }, [entries, weekStart, timePeriod]);
+  }, [entries, weekStart, lastWeekStart, timePeriod]);
 
   // Calculate points per member based on time period
   const getPointsForMember = (memberId: string) => {
@@ -128,9 +132,12 @@ export default function Home() {
   // Get current leader (member with most points)
   const getCurrentLeader = useCallback((entriesList: PointEntry[]) => {
     const weekStartDate = getWeekStart();
+    const lastWeekStartDate = getLastWeekStart();
     const relevantEntries = timePeriod === "week"
       ? entriesList.filter((entry) => isInWeek(entry.timestamp, weekStartDate))
-      : entriesList;
+      : timePeriod === "lastWeek"
+        ? entriesList.filter((entry) => isInWeek(entry.timestamp, lastWeekStartDate))
+        : entriesList;
 
     let maxPoints = 0;
     let leader: string | null = null;
@@ -471,7 +478,7 @@ export default function Home() {
               <h2 className="text-lg font-semibold">Team</h2>
             </div>
             <span className="text-xs text-muted">
-              {timePeriod === "week" ? "This Week" : "All Time"}
+              {timePeriod === "week" ? "This Week" : timePeriod === "lastWeek" ? "Last Week" : "All Time"}
             </span>
           </div>
 

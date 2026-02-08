@@ -13,10 +13,10 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { PointEntry, TeamMember, Task, DAILY_BONUS_POINTS } from "@/lib/types";
-import { getWeekStart, getWeekDays, formatDayShort, isInWeek, isUpToToday } from "@/lib/dates";
+import { getWeekStart, getLastWeekStart, getWeekDays, formatDayShort, isInWeek, isUpToToday } from "@/lib/dates";
 import { Que } from "@/components/Que";
 
-export type TimePeriod = "week" | "all";
+export type TimePeriod = "week" | "lastWeek" | "all";
 
 interface WeeklyLeaderboardProps {
   entries: PointEntry[];
@@ -54,12 +54,16 @@ export function WeeklyLeaderboard({
 
   // Filter entries based on time period
   const weekStart = getWeekStart();
+  const lastWeekStart = getLastWeekStart();
   const filteredEntries = useMemo(() => {
     if (timePeriod === "week") {
       return entries.filter((entry) => isInWeek(entry.timestamp, weekStart));
     }
+    if (timePeriod === "lastWeek") {
+      return entries.filter((entry) => isInWeek(entry.timestamp, lastWeekStart));
+    }
     return entries; // All time
-  }, [entries, weekStart, timePeriod]);
+  }, [entries, weekStart, lastWeekStart, timePeriod]);
 
   // Get the date range for all entries
   const dateRange = useMemo(() => {
@@ -71,9 +75,9 @@ export function WeeklyLeaderboard({
     };
   }, [entries]);
 
-  // Prepare line chart data for weekly view (cumulative points per day)
+  // Prepare line chart data for current week (cumulative points per day)
   const weeklyLineChartData = useMemo(() => {
-    const weekDays = getWeekDays();
+    const weekDays = getWeekDays(weekStart);
     const weekEntries = entries.filter((entry) => isInWeek(entry.timestamp, weekStart));
 
     return weekDays
@@ -96,6 +100,30 @@ export function WeeklyLeaderboard({
         return dataPoint;
       });
   }, [entries, teamMembers, tasks, weekStart]);
+
+  // Prepare line chart data for last week (cumulative points per day, all 7 days)
+  const lastWeekLineChartData = useMemo(() => {
+    const weekDays = getWeekDays(lastWeekStart);
+    const weekEntries = entries.filter((entry) => isInWeek(entry.timestamp, lastWeekStart));
+
+    return weekDays.map((day) => {
+      const dayEnd = new Date(day);
+      dayEnd.setHours(23, 59, 59, 999);
+
+      const dataPoint: Record<string, string | number> = {
+        day: formatDayShort(day),
+      };
+
+      teamMembers.forEach((member) => {
+        const cumulativePoints = weekEntries
+          .filter((entry) => entry.memberId === member.id && entry.timestamp <= dayEnd)
+          .reduce((sum, entry) => sum + getEntryPoints(entry), 0);
+        dataPoint[member.name] = cumulativePoints;
+      });
+
+      return dataPoint;
+    });
+  }, [entries, teamMembers, tasks, lastWeekStart]);
 
   // Prepare line chart data for all time view (by week)
   const allTimeLineChartData = useMemo(() => {
@@ -140,7 +168,11 @@ export function WeeklyLeaderboard({
   }, [entries, teamMembers, tasks]);
 
   // Select appropriate line chart data
-  const lineChartData = timePeriod === "week" ? weeklyLineChartData : allTimeLineChartData;
+  const lineChartData = timePeriod === "week"
+    ? weeklyLineChartData
+    : timePeriod === "lastWeek"
+      ? lastWeekLineChartData
+      : allTimeLineChartData;
 
   // Prepare bar chart data (total points per member, sorted)
   const barChartData = useMemo(() => {
@@ -224,7 +256,7 @@ export function WeeklyLeaderboard({
         <div className="bg-card border border-border rounded-lg px-3 py-2 shadow-lg">
           <p className="text-sm font-medium text-foreground">{data.name}</p>
           <p className="text-xs text-crimson">
-            {data.points} pts {timePeriod === "week" ? "this week" : "all time"}
+            {data.points} pts {timePeriod === "week" ? "this week" : timePeriod === "lastWeek" ? "last week" : "all time"}
           </p>
         </div>
       );
@@ -255,6 +287,16 @@ export function WeeklyLeaderboard({
               }`}
             >
               This Week
+            </button>
+            <button
+              onClick={() => onTimePeriodChange("lastWeek")}
+              className={`px-3 py-1.5 text-sm font-medium rounded transition-all ${
+                timePeriod === "lastWeek"
+                  ? "bg-crimson text-white"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              Last Week
             </button>
             <button
               onClick={() => onTimePeriodChange("all")}
@@ -300,7 +342,9 @@ export function WeeklyLeaderboard({
           <div className="h-64 flex items-center justify-center text-muted">
             {timePeriod === "week"
               ? "No points logged this week yet"
-              : "No points logged yet"}
+              : timePeriod === "lastWeek"
+                ? "No points logged last week"
+                : "No points logged yet"}
           </div>
         ) : viewMode === "line" ? (
           /* Line Chart - Progress Over Time */
@@ -372,6 +416,8 @@ export function WeeklyLeaderboard({
           <span>
             {timePeriod === "week" ? (
               <>Week of {weekStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</>
+            ) : timePeriod === "lastWeek" ? (
+              <>Week of {lastWeekStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</>
             ) : dateRange ? (
               <>
                 {dateRange.start.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
@@ -384,7 +430,7 @@ export function WeeklyLeaderboard({
           </span>
           <span>
             {filteredEntries.length} {filteredEntries.length === 1 ? "entry" : "entries"}
-            {timePeriod === "week" ? " this week" : " total"}
+            {timePeriod === "week" ? " this week" : timePeriod === "lastWeek" ? " last week" : " total"}
           </span>
         </div>
       </div>
