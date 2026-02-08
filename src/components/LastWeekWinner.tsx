@@ -24,7 +24,8 @@ export function LastWeekWinner({ entries, teamMembers, tasks }: LastWeekWinnerPr
     const pointsByMember: Record<string, number> = {};
     for (const entry of lastWeekEntries) {
       const task = tasks.find((t) => t.id === entry.taskId);
-      const basePoints = (task?.points || 0) * entry.quantity;
+      const taskPoints = task?.points || entry.customTaskPoints || 0;
+      const basePoints = taskPoints * entry.quantity;
       const bonus = entry.dailyBonus ? DAILY_BONUS_POINTS : 0;
       pointsByMember[entry.memberId] = (pointsByMember[entry.memberId] || 0) + basePoints + bonus;
     }

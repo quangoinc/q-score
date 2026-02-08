@@ -7,9 +7,10 @@ interface SearchableTaskSelectProps {
   tasks: Task[];
   value: string;
   onChange: (value: string) => void;
+  customTaskName?: string;
 }
 
-export function SearchableTaskSelect({ tasks, value, onChange }: SearchableTaskSelectProps) {
+export function SearchableTaskSelect({ tasks, value, onChange, customTaskName }: SearchableTaskSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
@@ -58,7 +59,11 @@ export function SearchableTaskSelect({ tasks, value, onChange }: SearchableTaskS
         onClick={() => setIsOpen(!isOpen)}
         className="w-full bg-background border border-border rounded-lg px-4 py-3 text-left focus:outline-none focus:border-crimson transition-colors"
       >
-        {selectedTask ? (
+        {value === "custom" ? (
+          <span className="text-foreground">
+            {customTaskName || "Custom task"}
+          </span>
+        ) : selectedTask ? (
           <span className="text-foreground">
             {selectedTask.name} (+{selectedTask.points} pts)
           </span>
@@ -80,23 +85,29 @@ export function SearchableTaskSelect({ tasks, value, onChange }: SearchableTaskS
             />
           </div>
           <div className="max-h-60 overflow-y-auto bg-[#0a0a0a]">
-            {filteredTasks.length === 0 ? (
-              <div className="px-4 py-3 text-sm text-muted">No tasks found</div>
-            ) : (
-              filteredTasks.map((task) => (
-                <button
-                  key={task.id}
-                  type="button"
-                  onClick={() => handleSelect(task.id)}
-                  className={`w-full px-4 py-3 text-left hover:bg-card transition-colors flex justify-between items-center bg-[#0a0a0a] ${
-                    task.id === value ? "bg-card" : ""
-                  }`}
-                >
-                  <span className="text-foreground">{task.name}</span>
-                  <span className="text-sm text-crimson font-medium">+{task.points}</span>
-                </button>
-              ))
-            )}
+            {filteredTasks.map((task) => (
+              <button
+                key={task.id}
+                type="button"
+                onClick={() => handleSelect(task.id)}
+                className={`w-full px-4 py-3 text-left hover:bg-card transition-colors flex justify-between items-center bg-[#0a0a0a] ${
+                  task.id === value ? "bg-card" : ""
+                }`}
+              >
+                <span className="text-foreground">{task.name}</span>
+                <span className="text-sm text-crimson font-medium">+{task.points}</span>
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => handleSelect("custom")}
+              className={`w-full px-4 py-3 text-left hover:bg-card transition-colors flex items-center gap-2 bg-[#0a0a0a] ${
+                filteredTasks.length > 0 ? "border-t border-border" : ""
+              } ${value === "custom" ? "bg-card" : ""}`}
+            >
+              <span className="text-crimson text-sm">+</span>
+              <span className="text-muted">Custom task</span>
+            </button>
           </div>
         </div>
       )}

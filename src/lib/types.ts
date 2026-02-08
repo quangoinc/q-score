@@ -21,6 +21,8 @@ export interface PointEntry {
   quantity: number;
   timestamp: Date;
   dailyBonus?: boolean;
+  customTaskName?: string;
+  customTaskPoints?: number;
 }
 
 // Daily bonus points for first task of the day

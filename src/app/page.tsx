@@ -28,6 +28,8 @@ export default function Home() {
   const [entries, setEntries] = useState<PointEntry[]>([]);
   const [selectedMember, setSelectedMember] = useState("");
   const [selectedTask, setSelectedTask] = useState("");
+  const [customTaskName, setCustomTaskName] = useState("");
+  const [customTaskPoints, setCustomTaskPoints] = useState(10);
   const [quantity, setQuantity] = useState(1);
   const [showSuccess, setShowSuccess] = useState(false);
   const [lastEntry, setLastEntry] = useState<{ memberName: string; taskName: string; points: number; quantity: number } | null>(null);
@@ -117,7 +119,8 @@ export default function Home() {
       .filter((entry) => entry.memberId === memberId)
       .reduce((total, entry) => {
         const task = tasks.find((t) => t.id === entry.taskId);
-        const basePoints = (task?.points || 0) * entry.quantity;
+        const taskPoints = task?.points || entry.customTaskPoints || 0;
+        const basePoints = taskPoints * entry.quantity;
         const bonus = entry.dailyBonus ? DAILY_BONUS_POINTS : 0;
         return total + basePoints + bonus;
       }, 0);
@@ -138,7 +141,8 @@ export default function Home() {
         .filter((entry) => entry.memberId === member.id)
         .reduce((total, entry) => {
           const task = tasks.find((t) => t.id === entry.taskId);
-          const basePoints = (task?.points || 0) * entry.quantity;
+          const taskPoints = task?.points || entry.customTaskPoints || 0;
+          const basePoints = taskPoints * entry.quantity;
           const bonus = entry.dailyBonus ? DAILY_BONUS_POINTS : 0;
           return total + basePoints + bonus;
         }, 0);
@@ -193,17 +197,25 @@ export default function Home() {
     e.preventDefault();
     if (!selectedMember || !selectedTask || quantity < 1) return;
 
+    const isCustom = selectedTask === "custom";
+    if (isCustom && (!customTaskName.trim() || customTaskPoints < 1)) return;
+
     const newEntry: PointEntry = {
       id: Date.now().toString(),
       memberId: selectedMember,
       taskId: selectedTask,
       quantity: quantity,
       timestamp: new Date(),
+      ...(isCustom && {
+        customTaskName: customTaskName.trim(),
+        customTaskPoints: customTaskPoints,
+      }),
     };
 
     const member = users.find((m) => m.id === selectedMember);
     const task = tasks.find((t) => t.id === selectedTask);
-    const totalPoints = (task?.points || 0) * quantity;
+    const points = isCustom ? customTaskPoints : (task?.points || 0);
+    const totalPoints = points * quantity;
 
     // Save to database and update state
     const updatedEntries = await addEntry(newEntry);
@@ -214,13 +226,15 @@ export default function Home() {
 
     setLastEntry({
       memberName: member?.name || "",
-      taskName: task?.name || "",
+      taskName: isCustom ? customTaskName.trim() : (task?.name || ""),
       points: totalPoints,
       quantity: quantity,
     });
     setShowSuccess(true);
     setSelectedMember("");
     setSelectedTask("");
+    setCustomTaskName("");
+    setCustomTaskPoints(10);
     setQuantity(1);
 
     // Hide success message after 3 seconds
@@ -234,6 +248,7 @@ export default function Home() {
 
     const member = users.find((m) => m.id === entryToDelete.memberId);
     const task = tasks.find((t) => t.id === entryToDelete.taskId);
+    const taskName = task?.name || entryToDelete.customTaskName || "Unknown Task";
 
     // Delete immediately
     const updatedEntries = await deleteEntry(id);
@@ -244,7 +259,7 @@ export default function Home() {
 
     // Show undo toast
     showToast({
-      message: `Deleted ${member?.name}'s ${task?.name}`,
+      message: `Deleted ${member?.name}'s ${taskName}`,
       type: "undo",
       duration: 5000,
       action: {
@@ -365,8 +380,34 @@ export default function Home() {
               tasks={tasks}
               value={selectedTask}
               onChange={setSelectedTask}
+              customTaskName={customTaskName}
             />
           </div>
+
+          {selectedTask === "custom" && (
+            <>
+              <div className="flex-1 min-w-[180px]">
+                <label className="block text-sm text-muted mb-2">What did you do?</label>
+                <input
+                  type="text"
+                  value={customTaskName}
+                  onChange={(e) => setCustomTaskName(e.target.value)}
+                  placeholder="Describe the task..."
+                  className="w-full bg-background border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted focus:outline-none focus:border-crimson transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-muted mb-2">Points</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={customTaskPoints}
+                  onChange={(e) => setCustomTaskPoints(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-20 bg-background border border-border rounded-lg px-4 py-3 text-foreground focus:outline-none focus:border-crimson transition-colors text-center"
+                />
+              </div>
+            </>
+          )}
 
           <div>
             <label className="block text-sm text-muted mb-2">Qty</label>
@@ -401,7 +442,7 @@ export default function Home() {
 
           <button
             type="submit"
-            disabled={!selectedMember || !selectedTask}
+            disabled={!selectedMember || !selectedTask || (selectedTask === "custom" && !customTaskName.trim())}
             className="px-6 py-3 bg-crimson text-white font-medium rounded-lg hover:bg-crimson-dark disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           >
             Add Points

@@ -20,6 +20,8 @@ export async function loadEntries(): Promise<PointEntry[]> {
     quantity: entry.quantity,
     timestamp: new Date(entry.timestamp),
     dailyBonus: entry.daily_bonus || false,
+    customTaskName: entry.custom_task_name || undefined,
+    customTaskPoints: entry.custom_task_points || undefined,
   }));
 }
 
@@ -51,16 +53,21 @@ export async function addEntry(entry: PointEntry): Promise<PointEntry[]> {
   // Check if this qualifies for daily bonus
   const dailyBonus = await isFirstEntryOfDay(entry.memberId, entry.timestamp);
 
+  const insertData: Record<string, unknown> = {
+    id: entry.id,
+    member_id: entry.memberId,
+    task_id: entry.taskId,
+    quantity: entry.quantity,
+    timestamp: entry.timestamp.toISOString(),
+    daily_bonus: dailyBonus,
+  };
+
+  if (entry.customTaskName) insertData.custom_task_name = entry.customTaskName;
+  if (entry.customTaskPoints) insertData.custom_task_points = entry.customTaskPoints;
+
   const { error } = await supabase
     .from("entries")
-    .insert({
-      id: entry.id,
-      member_id: entry.memberId,
-      task_id: entry.taskId,
-      quantity: entry.quantity,
-      timestamp: entry.timestamp.toISOString(),
-      daily_bonus: dailyBonus,
-    });
+    .insert(insertData);
 
   if (error) {
     console.error("Failed to add entry:", error);

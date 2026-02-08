@@ -105,10 +105,11 @@ export function ActivityFeed({
           const task = getTask(entry.taskId);
           const member = getMember(entry.memberId);
           const memberName = member?.name || "Unknown";
-          const basePoints = (task?.points || 0) * entry.quantity;
+          const taskPoints = task?.points || entry.customTaskPoints || 0;
+          const basePoints = taskPoints * entry.quantity;
           const bonusPoints = entry.dailyBonus ? DAILY_BONUS_POINTS : 0;
           const totalPoints = basePoints + bonusPoints;
-          const taskName = task?.name || "Unknown Task";
+          const taskName = task?.name || entry.customTaskName || "Unknown Task";
           const isEditing = editingEntry?.id === entry.id;
 
           if (isEditing && editingEntry) {

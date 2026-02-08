@@ -47,7 +47,7 @@ export function WeeklyLeaderboard({
 
   // Get total points for an entry (task points + daily bonus)
   const getEntryPoints = (entry: PointEntry): number => {
-    const taskPoints = tasks.find((t) => t.id === entry.taskId)?.points || 0;
+    const taskPoints = tasks.find((t) => t.id === entry.taskId)?.points || entry.customTaskPoints || 0;
     const bonus = entry.dailyBonus ? DAILY_BONUS_POINTS : 0;
     return taskPoints * entry.quantity + bonus;
   };
