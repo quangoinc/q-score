@@ -101,6 +101,8 @@ export async function updateEntry(
   if (updates.taskId !== undefined) updateData.task_id = updates.taskId;
   if (updates.quantity !== undefined) updateData.quantity = updates.quantity;
   if (updates.timestamp !== undefined) updateData.timestamp = updates.timestamp.toISOString();
+  if (updates.customTaskName !== undefined) updateData.custom_task_name = updates.customTaskName || null;
+  if (updates.customTaskPoints !== undefined) updateData.custom_task_points = updates.customTaskPoints || null;
 
   const { error } = await supabase
     .from("entries")

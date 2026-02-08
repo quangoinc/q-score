@@ -20,6 +20,8 @@ interface EditingState {
   memberId: string;
   taskId: string;
   quantity: number;
+  customTaskName: string;
+  customTaskPoints: number;
 }
 
 export function ActivityFeed({
@@ -56,15 +58,19 @@ export function ActivityFeed({
       memberId: entry.memberId,
       taskId: entry.taskId,
       quantity: entry.quantity,
+      customTaskName: entry.customTaskName || "",
+      customTaskPoints: entry.customTaskPoints || 10,
     });
   };
 
   const handleEditSave = () => {
     if (editingEntry && onUpdate) {
+      const isCustom = editingEntry.taskId === "custom";
       onUpdate(editingEntry.id, {
-        memberId: editingEntry.memberId,
         taskId: editingEntry.taskId,
         quantity: editingEntry.quantity,
+        customTaskName: isCustom ? editingEntry.customTaskName : undefined,
+        customTaskPoints: isCustom ? editingEntry.customTaskPoints : undefined,
       });
     }
     setEditingEntry(null);
@@ -116,29 +122,13 @@ export function ActivityFeed({
           const isEditing = editingEntry?.id === entry.id;
 
           if (isEditing && editingEntry) {
+            const isCustomEditing = editingEntry.taskId === "custom";
             return (
               <div
                 key={entry.id}
                 className="px-5 py-4 bg-card/50"
               >
                 <div className="flex flex-wrap gap-3 items-end">
-                  <div className="flex-1 min-w-[140px]">
-                    <label className="block text-xs text-muted mb-1.5">Member</label>
-                    <select
-                      value={editingEntry.memberId}
-                      onChange={(e) =>
-                        setEditingEntry({ ...editingEntry, memberId: e.target.value })
-                      }
-                      className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-crimson transition-colors appearance-none cursor-pointer"
-                    >
-                      {teamMembers.map((member) => (
-                        <option key={member.id} value={member.id}>
-                          {member.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
                   <div className="flex-1 min-w-[140px]">
                     <label className="block text-xs text-muted mb-1.5">Task</label>
                     <select
@@ -153,8 +143,41 @@ export function ActivityFeed({
                           {t.name} (+{t.points})
                         </option>
                       ))}
+                      <option value="custom">Custom task</option>
                     </select>
                   </div>
+
+                  {isCustomEditing && (
+                    <>
+                      <div className="flex-1 min-w-[140px]">
+                        <label className="block text-xs text-muted mb-1.5">Description</label>
+                        <input
+                          type="text"
+                          value={editingEntry.customTaskName}
+                          onChange={(e) =>
+                            setEditingEntry({ ...editingEntry, customTaskName: e.target.value })
+                          }
+                          placeholder="Describe the task..."
+                          className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-crimson transition-colors"
+                        />
+                      </div>
+                      <div className="w-20">
+                        <label className="block text-xs text-muted mb-1.5">Points</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={editingEntry.customTaskPoints}
+                          onChange={(e) =>
+                            setEditingEntry({
+                              ...editingEntry,
+                              customTaskPoints: Math.max(1, parseInt(e.target.value) || 1),
+                            })
+                          }
+                          className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:border-crimson transition-colors text-center"
+                        />
+                      </div>
+                    </>
+                  )}
 
                   <div className="w-20">
                     <label className="block text-xs text-muted mb-1.5">Qty</label>
@@ -175,7 +198,8 @@ export function ActivityFeed({
                   <div className="flex gap-2">
                     <button
                       onClick={handleEditSave}
-                      className="px-3 py-2 bg-crimson text-white text-sm font-medium rounded-md hover:bg-crimson-dark transition-colors"
+                      disabled={isCustomEditing && !editingEntry.customTaskName.trim()}
+                      className="px-3 py-2 bg-crimson text-white text-sm font-medium rounded-md hover:bg-crimson-dark disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     >
                       Save
                     </button>
