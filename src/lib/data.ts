@@ -16,4 +16,6 @@ export const tasks: Task[] = [
     { id: "12", name: "Suggested a post idea", points: 20 },
     { id: "13", name: "Fix something small", points: 2 },
     { id: "14", name: "Did a walk-in", points: 30 },
+    { id: "15", name: "Sent a cold email", points: 2 },
+    { id: "16", name: "Sent a cold text", points: 2 },
 ];
