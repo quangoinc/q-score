@@ -26,7 +26,6 @@ export default function Home() {
   const { data: session, status } = useSession();
   const [users, setUsers] = useState<TeamMember[]>([]);
   const [entries, setEntries] = useState<PointEntry[]>([]);
-  const [selectedMember, setSelectedMember] = useState("");
   const [selectedTask, setSelectedTask] = useState("");
   const [customTaskName, setCustomTaskName] = useState("");
   const [customTaskPoints, setCustomTaskPoints] = useState(10);
@@ -195,14 +194,15 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedMember || !selectedTask || quantity < 1) return;
+    const currentUserId = session?.user?.email;
+    if (!currentUserId || !selectedTask || quantity < 1) return;
 
     const isCustom = selectedTask === "custom";
     if (isCustom && (!customTaskName.trim() || customTaskPoints < 1)) return;
 
     const newEntry: PointEntry = {
       id: Date.now().toString(),
-      memberId: selectedMember,
+      memberId: currentUserId,
       taskId: selectedTask,
       quantity: quantity,
       timestamp: new Date(),
@@ -212,7 +212,7 @@ export default function Home() {
       }),
     };
 
-    const member = users.find((m) => m.id === selectedMember);
+    const member = users.find((m) => m.id === currentUserId);
     const task = tasks.find((t) => t.id === selectedTask);
     const points = isCustom ? customTaskPoints : (task?.points || 0);
     const totalPoints = points * quantity;
@@ -231,7 +231,6 @@ export default function Home() {
       quantity: quantity,
     });
     setShowSuccess(true);
-    setSelectedMember("");
     setSelectedTask("");
     setCustomTaskName("");
     setCustomTaskPoints(10);
@@ -359,22 +358,6 @@ export default function Home() {
 
         <form onSubmit={handleSubmit} className="flex flex-wrap gap-4 items-end">
           <div className="flex-1 min-w-[180px]">
-            <label className="block text-sm text-muted mb-2">Team Member</label>
-            <select
-              value={selectedMember}
-              onChange={(e) => setSelectedMember(e.target.value)}
-              className="w-full bg-background border border-border rounded-lg px-4 py-3 text-foreground focus:outline-none focus:border-crimson transition-colors appearance-none cursor-pointer"
-            >
-              <option value="">Select member...</option>
-              {users.map((member) => (
-                <option key={member.id} value={member.id}>
-                  {member.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex-1 min-w-[180px]">
             <label className="block text-sm text-muted mb-2">Task Completed</label>
             <SearchableTaskSelect
               tasks={tasks}
@@ -442,7 +425,7 @@ export default function Home() {
 
           <button
             type="submit"
-            disabled={!selectedMember || !selectedTask || (selectedTask === "custom" && !customTaskName.trim())}
+            disabled={!selectedTask || (selectedTask === "custom" && !customTaskName.trim())}
             className="px-6 py-3 bg-crimson text-white font-medium rounded-lg hover:bg-crimson-dark disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           >
             Add Points
@@ -553,6 +536,7 @@ export default function Home() {
             entries={entries}
             teamMembers={users}
             tasks={tasks}
+            currentUserId={session?.user?.email || undefined}
             limit={15}
             onDelete={handleDeleteEntry}
             onUpdate={handleUpdateEntry}

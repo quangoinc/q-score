@@ -9,6 +9,7 @@ interface ActivityFeedProps {
   entries: PointEntry[];
   teamMembers: TeamMember[];
   tasks: Task[];
+  currentUserId?: string;
   limit?: number;
   onDelete?: (id: string) => void;
   onUpdate?: (id: string, updates: Partial<Omit<PointEntry, "id">>) => void;
@@ -25,6 +26,7 @@ export function ActivityFeed({
   entries,
   teamMembers,
   tasks,
+  currentUserId,
   limit = 15,
   onDelete,
   onUpdate,
@@ -110,6 +112,7 @@ export function ActivityFeed({
           const bonusPoints = entry.dailyBonus ? DAILY_BONUS_POINTS : 0;
           const totalPoints = basePoints + bonusPoints;
           const taskName = task?.name || entry.customTaskName || "Unknown Task";
+          const isOwnEntry = currentUserId === entry.memberId;
           const isEditing = editingEntry?.id === entry.id;
 
           if (isEditing && editingEntry) {
@@ -221,7 +224,7 @@ export function ActivityFeed({
               </div>
 
               <div className="flex items-center gap-3">
-                {(onUpdate || onDelete) && (
+                {isOwnEntry && (onUpdate || onDelete) && (
                   <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                     {onUpdate && (
                       <button
