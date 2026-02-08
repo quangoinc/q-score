@@ -68,6 +68,43 @@ body {
   box-shadow: 0 0 40px rgba(196, 30, 58, 0.15);
 }
 
+/* Last Week Winner animations */
+@keyframes winnerShimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes winnerFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes winnerBounce {
+  0%, 100% { transform: translateY(0) rotate(-10deg); }
+  50% { transform: translateY(-4px) rotate(5deg); }
+}
+
+@keyframes winnerTwinkle {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+.winner-shimmer {
+  animation: winnerShimmer 3s ease-in-out infinite;
+}
+
+.winner-float {
+  animation: winnerFloat 3s ease-in-out infinite;
+}
+
+.winner-bounce {
+  animation: winnerBounce 2s ease-in-out infinite;
+}
+
+.winner-twinkle {
+  animation: winnerTwinkle 2s ease-in-out infinite;
+}
+
 /* Hide number input spinners */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {

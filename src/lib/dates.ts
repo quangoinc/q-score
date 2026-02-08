@@ -1,5 +1,13 @@
 // Date utilities for weekly calculations
 
+// Get the start of last week (previous Sunday at 00:00:00)
+export function getLastWeekStart(date: Date = new Date()): Date {
+  const currentWeek = getWeekStart(date);
+  const lastWeek = new Date(currentWeek);
+  lastWeek.setDate(lastWeek.getDate() - 7);
+  return lastWeek;
+}
+
 // Get the start of the current week (Sunday at 00:00:00)
 export function getWeekStart(date: Date = new Date()): Date {
   const d = new Date(date);

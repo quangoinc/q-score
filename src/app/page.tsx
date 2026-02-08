@@ -20,6 +20,7 @@ import {
 import { SearchableTaskSelect } from "@/components/SearchableTaskSelect";
 import { Que } from "@/components/Que";
 import { ProfileSettings } from "@/components/ProfileSettings";
+import { LastWeekWinner } from "@/components/LastWeekWinner";
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -324,6 +325,15 @@ export default function Home() {
           )}
         </div>
       </header>
+
+      {/* Last Week's Winner */}
+      {isLoaded && (
+        <LastWeekWinner
+          entries={entries}
+          teamMembers={users}
+          tasks={tasks}
+        />
+      )}
 
       {/* Log Points Form */}
       <section className="mb-10 p-6 bg-card/50 border border-border rounded-xl crimson-glow animate-fade-in stagger-1 relative z-50">
